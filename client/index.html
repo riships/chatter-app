@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socket.IO Frontend</title>
+</head>
+
+<body>
+    <h1>Socket.IO Frontend</h1>
+    <div id="status">Not connected</div>
+
+    <input type="text" id="msgInput" placeholder="Enter Msg....">
+    <button id="sendMsg">Send</button>
+    <p style="margin: 0;padding: 0;" id="statusOfuser"></p>
+    <div id="messages">
+
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // Initialize Socket.IO connection variable
+        let socket;
+
+        // DOM Elements
+        const status = document.getElementById("status");
+        const msgInput = document.getElementById("msgInput")
+        const sendMsgBtn = document.getElementById("sendMsg")
+        const messagesContainer = document.getElementById("messages")
+        const user = prompt("enter user")
+
+        // Connect button click event
+
+        socket = io();  // Connect to the server
+
+        // When connected
+        socket.on("connect", () => {
+            console.log("Connected to server");
+            status.textContent = `${user} Connected to server`;
+            socket.emit('user', user)
+        });
+
+
+        sendMsgBtn.addEventListener('click', (event) => {
+            event.preventDefault()
+            if (msgInput.value) {
+                socket.emit('send', msgInput.value)
+                msgInput.value = '';
+                socket.emit('sendStatus', ""); 
+            }
+        })
+
+        msgInput.addEventListener('focus', (event) => {
+            event.preventDefault()
+            socket.emit('sendStatus', "Typing...")
+        })
+
+        socket.on('typing', (msg) => {            
+            if (msg) {
+                document.getElementById("statusOfuser").innerHTML = msg
+            }
+        })
+
+
+
+        socket.on('message', (msg) => {
+            if (msg) {
+                let msgP = document.createElement('p');
+                msgP.innerHTML = msg
+                messagesContainer.appendChild(msgP)
+            }
+        })
+
+    </script>
+</body>
+
+</html>
