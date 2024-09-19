@@ -17,62 +17,60 @@
     <div id="messages">
 
     </div>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        // Initialize Socket.IO connection variable
-        let socket;
+        $(document).ready(function () {
+            // Initialize Socket.IO connection variable
+            let socket;
 
-        // DOM Elements
-        const status = document.getElementById("status");
-        const msgInput = document.getElementById("msgInput")
-        const sendMsgBtn = document.getElementById("sendMsg")
-        const messagesContainer = document.getElementById("messages")
-        const user = prompt("enter user")
+            // DOM Elements
+            const status = $("#status");
+            const msgInput = $("#msgInput")
+            const sendMsgBtn = $("#sendMsg")
+            const messagesContainer = $("#messages")
+            const user = prompt("enter user")
 
-        // Connect button click event
+            // Connect button click event
 
-        socket = io();  // Connect to the server
+            socket = io();  // Connect to the server
 
-        // When connected
-        socket.on("connect", () => {
-            console.log("Connected to server");
-            status.textContent = `${user} Connected to server`;
-            socket.emit('user', user)
+            // When connected
+            socket.on("connect", () => {
+                console.log("Connected to server");
+                status.text(`${user} Connected to server`);
+                socket.emit('user', user)
+            });
+
+
+            sendMsgBtn.on('click', (event) => {
+                event.preventDefault()
+                if (msgInput.val()) {
+                    socket.emit('send', msgInput.val())
+                    msgInput.val('')
+                    socket.emit('sendStatus', " ");
+                }
+            })
+            msgInput.on('focus', (event) => {
+                event.preventDefault()
+                socket.emit('sendStatus', "Typing...")
+            })
+
+            socket.on('typing', (msg) => {
+                if (msg) {
+                    $("#statusOfuser").html(msg)
+                }
+            })
+            socket.on('message', (msg) => {
+                if (msg) {
+                    let msgP = $('<p></p>');
+                    msgP.html(msg)
+                    messagesContainer.append(msgP)
+                }
+            })
         });
-
-
-        sendMsgBtn.addEventListener('click', (event) => {
-            event.preventDefault()
-            if (msgInput.value) {
-                socket.emit('send', msgInput.value)
-                msgInput.value = '';
-                socket.emit('sendStatus', ""); 
-            }
-        })
-
-        msgInput.addEventListener('focus', (event) => {
-            event.preventDefault()
-            socket.emit('sendStatus', "Typing...")
-        })
-
-        socket.on('typing', (msg) => {            
-            if (msg) {
-                document.getElementById("statusOfuser").innerHTML = msg
-            }
-        })
-
-
-
-        socket.on('message', (msg) => {
-            if (msg) {
-                let msgP = document.createElement('p');
-                msgP.innerHTML = msg
-                messagesContainer.appendChild(msgP)
-            }
-        })
-
     </script>
+
 </body>
 
 </html>

@@ -32,9 +32,10 @@ io.on('connection', (socket) => {
         });
 
         socket.on("sendStatus", (msg) => {
-            console.log(msg);
-            if (msg) {
-                socket.broadcast.emit('typing', `<b>${user}:-</b> ${msg}`); // Broadcast to all connected clients
+            if (msg == ' ') {
+                socket.broadcast.emit('typing', ` `); // Broadcast to all connected clients
+            }else{
+                socket.broadcast.emit('typing', `<b>${user}:-</b> ${msg}`);
             }
         });
 
