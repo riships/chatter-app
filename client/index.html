@@ -30,6 +30,7 @@
             const sendMsgBtn = $("#sendMsg")
             const messagesContainer = $("#messages")
             const user = prompt("enter user")
+            const getRoom = prompt("Enter Room Name You want to join")
 
             // Connect button click event
 
@@ -40,6 +41,7 @@
                 console.log("Connected to server");
                 status.text(`${user} Connected to server`);
                 socket.emit('user', user)
+                socket.emit('create', getRoom);
             });
 
 

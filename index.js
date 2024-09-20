@@ -22,26 +22,31 @@ io.on('connection', (socket) => {
 
     // Listen for 'user' event after the client connects
     socket.on("user", (user) => {
-        console.log(`${user} connected`);
+        socket.on('create', function (room) {
 
-        // Handle message sending
-        socket.on("send", (msg) => {
-            if (msg) {
-                socket.broadcast.emit('message', `<b>${user}:-</b> ${msg}`); // Broadcast to all connected clients
-            }
-        });
+            socket.broadcast.to(room).emit('message', `${user} has joined the chat`);
 
-        socket.on("sendStatus", (msg) => {
-            if (msg == ' ') {
-                socket.broadcast.emit('typing', ` `); // Broadcast to all connected clients
-            }else{
-                socket.broadcast.emit('typing', `<b>${user}:-</b> ${msg}`);
-            }
-        });
+            socket.join(room);
 
-        // Handle client disconnect
-        socket.on("disconnect", () => {
-            console.log(`${user} disconnected`);
+            // Handle message sending
+            socket.on("send", (msg) => {
+                if (msg) {
+                    socket.to(room).emit('message', `<b>${user}:-</b> ${msg}`); // Broadcast to all connected clients
+                }
+            });
+
+            socket.on("sendStatus", (msg) => {
+                if (msg == ' ') {
+                    socket.to(room).emit('typing', ` `); // Broadcast to all connected clients
+                } else {
+                    socket.to(room).emit('typing', `<b>${user}:-</b> ${msg}`);
+                }
+            });
+
+            // Handle client disconnect
+            socket.on("disconnect", () => {
+                console.log(`${user} disconnected`);
+            });
         });
     });
 })
