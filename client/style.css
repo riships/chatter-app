@@ -1,0 +1,283 @@
+/* General Styles */
+body,
+html {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    height: 100%;
+}
+p{
+    margin: 0;
+}
+h3{
+    margin: 0;
+}
+
+/* Login Page */
+.login-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f0f0f0;
+}
+
+.login-container {
+    background-color: white;
+    padding: 40px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 100%;
+    max-width: 400px;
+}
+
+.login-container h2 {
+    margin-bottom: 20px;
+    color: #aa4dbc;
+}
+
+.login-container form input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.login-container form button {
+    width: 100%;
+    padding: 12px;
+    background-color: #aa4dbc;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.login-container a {
+    display: block;
+    margin-top: 10px;
+    color: #555;
+    text-decoration: none;
+}
+
+.login-container a:hover {
+    text-decoration: underline;
+}
+
+/* Chat Dashboard */
+.chat-dashboard {
+    display: flex;
+    height: 100vh;
+}
+
+.sidebar {
+    width: 30%;
+    background-color: #fff;
+    border-right: 1px solid #e0e0e0;
+}
+
+.profile-section {
+    padding: 20px;
+    text-align: center;
+}
+
+.profile-section .profile-pic {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.search-bar input {
+    width: 90%;
+    padding: 10px;
+    margin: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.conversations-list {
+    padding: 10px;
+}
+
+.conversation-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #e0e0e0;
+    cursor: pointer;
+}
+
+.conversation-item:hover {
+    background-color: #f5f5f5;
+}
+
+.conversation-item .contact-pic {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 10px;
+}
+
+.conversation-info h5 {
+    margin: 0;
+}
+
+.conversation-info p {
+    margin: 0;
+    font-size: 12px;
+    color: #666;
+}
+
+.time {
+    margin-left: auto;
+    font-size: 12px;
+    color: #aaa;
+}
+
+/* Main Chat Window */
+.main-chat-window {
+    width: 70%;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-header {
+    padding: 20px;
+    background-color: #aa4dbc;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat-area {
+    flex-grow: 1;
+    padding: 20px;
+    background-color: #f9f9f9;
+    overflow-y: auto;
+}
+
+.chat-message {
+    display: flex;
+    align-items: center;
+    max-width: max-content;
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 10px;
+    position: relative;
+}
+
+.chat-message .chat-pic {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+    object-fit: cover;
+}
+
+.contact-message {
+    background-color: #e0e0e0;
+}
+
+.user-message {
+    background-color: #aa4dbc;
+    color: white;
+    margin-left: auto;
+    flex-direction: row-reverse;
+}
+
+.user-message .chat-pic {
+    margin-left: 10px;
+    margin-right: 0;
+}
+
+.message-content p {
+    margin: 0;
+    padding: 0;
+}
+
+.timestamp {
+    font-size: 10px;
+    color: #777;
+    display: block;
+    margin-top: 5px;
+    text-align: right;
+}
+
+.chat-input-area {
+    display: flex;
+    padding: 10px;
+    background-color: white;
+    border-top: 1px solid #e0e0e0;
+}
+
+.chat-input-area input {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.chat-input-area .send-btn {
+    background-color: #aa4dbc;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin-left: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* Responsive Styles */
+@media screen and (max-width: 768px) {
+    .chat-dashboard {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #e0e0e0;
+        text-align: center;
+    }
+
+    .main-chat-window {
+        width: 100%;
+    }
+}
+
+@media screen and (max-width: 576px) {
+
+    .chat-header,
+    .chat-input-area {
+        padding: 10px;
+    }
+
+    .profile-section .profile-pic {
+        width: 60px;
+        height: 60px;
+    }
+
+    .chat-message {
+        max-width: 90%;
+    }
+
+    .user-message {
+        margin-left: 0;
+    }
+
+    .sidebar {
+        display: none;
+    }
+
+    .chat-header {
+        justify-content: space-between;
+    }
+
+    .chat-input-area input {
+        font-size: 14px;
+    }
+}
