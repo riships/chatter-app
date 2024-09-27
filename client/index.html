@@ -4,75 +4,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Socket.IO Frontend</title>
+    <title>Chat Application</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
-    <h1>Socket.IO Frontend</h1>
-    <div id="status">Not connected</div>
+    <!-- Login Page -->
+    <div class="login-page">
+        <div class="login-container">
+            <h2>Chat App</h2>
+            <form>
+                <input type="text" placeholder="Username" id="username" required>
+                <input type="text" placeholder="Room ID" id="roomid" required>
+                <button type="submit">Join</button>
+            </form>
+        </div>
+    </div>
 
-    <input type="text" id="msgInput" placeholder="Enter Msg....">
-    <button id="sendMsg">Send</button>
-    <p style="margin: 0;padding: 0;" id="statusOfuser"></p>
-    <div id="messages">
+    <!-- Chat Dashboard -->
+    <div class="chat-dashboard" style="display: none;">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="profile-section">
+                <img src="profile-pic.jpg" alt="User Profile" class="profile-pic">
+                <h4>User Name</h4>
+                <p>Status: Online</p>
+            </div>
+            <div class="search-bar">
+                <input type="text" placeholder="Search...">
+            </div>
+            <div class="conversations-list">
+                <div class="conversation-item">
+                    <img src="contact1.jpg" alt="Contact" class="contact-pic">
+                    <div class="conversation-info">
+                        <h5>Contact Name</h5>
+                        <p>Last message preview</p>
+                    </div>
+                    <span class="time">10:30 AM</span>
+                </div>
+                <!-- Repeat conversation items as needed -->
+            </div>
+        </div>
 
+        <!-- Main Chat Window -->
+        <div class="main-chat-window">
+            <div class="chat-header">
+                <h3>Contact Name</h3>
+                <p>Online</p>
+            </div>
+            <div class="chat-area">
+                <div class="chat-message contact-message">
+                    <img src="contact1.jpg" alt="Contact" class="chat-pic">
+                    <div class="message-content">
+                        <p>Hey! How are you doing?</p>
+                        <span class="timestamp">10:30 AM</span>
+                    </div>
+                </div>
+                <div class="chat-message user-message">
+                    <img src="user-profile.jpg" alt="User" class="chat-pic">
+                    <div class="message-content">
+                        <p>I'm doing great, thanks! How about you?</p>
+                        <span class="timestamp">10:32 AM</span>
+                    </div>
+                </div>
+                <!-- More chat messages -->
+            </div>
+            <div class="chat-input-area">
+                <input type="text" placeholder="Type a message...">
+                <button class="send-btn">Send</button>
+            </div>
+        </div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <script>
-        $(document).ready(function () {
-            // Initialize Socket.IO connection variable
-            let socket;
-
-            // DOM Elements
-            const status = $("#status");
-            const msgInput = $("#msgInput")
-            const sendMsgBtn = $("#sendMsg")
-            const messagesContainer = $("#messages")
-            const user = prompt("enter user")
-            const getRoom = prompt("Enter Room Name You want to join")
-
-            // Connect button click event
-
-            socket = io();  // Connect to the server
-
-            // When connected
-            socket.on("connect", () => {
-                console.log("Connected to server");
-                status.text(`${user} Connected to server`);
-                socket.emit('user', user)
-                socket.emit('create', getRoom);
-            });
-
-
-            sendMsgBtn.on('click', (event) => {
-                event.preventDefault()
-                if (msgInput.val()) {
-                    socket.emit('send', msgInput.val())
-                    msgInput.val('')
-                    socket.emit('sendStatus', " ");
-                }
-            })
-            msgInput.on('focus', (event) => {
-                event.preventDefault()
-                socket.emit('sendStatus', "Typing...")
-            })
-
-            socket.on('typing', (msg) => {
-                if (msg) {
-                    $("#statusOfuser").html(msg)
-                }
-            })
-            socket.on('message', (msg) => {
-                if (msg) {
-                    let msgP = $('<p></p>');
-                    msgP.html(msg)
-                    messagesContainer.append(msgP)
-                }
-            })
-        });
-    </script>
-
+    <script src="js/script.js"></script>
 </body>
 
 </html>
