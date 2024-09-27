@@ -10,7 +10,7 @@
 
 <body>
     <!-- Login Page -->
-    <div class="login-page">
+    <div class="login-page" id="loginPage">
         <div class="login-container">
             <h2>Chat App</h2>
             <form>
@@ -22,7 +22,7 @@
     </div>
 
     <!-- Chat Dashboard -->
-    <div class="chat-dashboard" style="display: none;">
+    <div class="chat-dashboard" id="chatDashboard" style="display: none;">
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="profile-section">
@@ -49,8 +49,8 @@
         <!-- Main Chat Window -->
         <div class="main-chat-window">
             <div class="chat-header">
-                <h3>Contact Name</h3>
-                <p>Online</p>
+                <h3 id="userName">Contact Name</h3>
+                <p id="userStatus">Online</p>
             </div>
             <div class="chat-area">
                 <div class="chat-message contact-message">

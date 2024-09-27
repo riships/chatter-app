@@ -3,23 +3,27 @@ $(document).ready(function () {
     let socket;
 
     // DOM Elements
-    const status = $("#status");
+    const userStatus = $("#userStatus");
     const msgInput = $("#msgInput")
     const sendMsgBtn = $("#sendMsg")
     const messagesContainer = $("#messages")
-    const user = $("#username")
+    const user = $("#username").val()
     const getRoom = $("#roomid")
+    const loginPage = $("#loginPage");
+    const chatDashboard = $("#chatDashboard");
 
     // Connect button click event
 
     socket = io();  // Connect to the server
 
     if (user && getRoom) {
-
+        loginPage.hide();
+        chatDashboard.show();
         // When connected
         socket.on("connect", () => {
             console.log("Connected to server");
-            status.text(`${user} Connected to server`);
+            console.log(user);
+            userStatus.text(`${user} Connected to server`);
             socket.emit('user', user)
             socket.emit('create', getRoom);
         });
