@@ -18,10 +18,9 @@ app.get("/", (req, res) => {
 });
 
 io.on('connection', (socket) => {
-    console.log("New client connected");
-
     // Listen for 'user' event after the client connects
     socket.on("user", (user) => {
+        console.log(user + " connected");
         socket.on('create', function (room) {
 
             const joinMessage = `${user} has joined the chat`;
