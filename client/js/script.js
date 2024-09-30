@@ -4,58 +4,86 @@ $(document).ready(function () {
 
     // DOM Elements
     const userStatus = $("#userStatus");
-    const msgInput = $("#msgInput")
-    const sendMsgBtn = $("#sendMsg")
-    const messagesContainer = $("#messages")
-    const user = $("#username").val()
-    const getRoom = $("#roomid")
+    const msgInput = $("#msgInput");
+    const sendMsgBtn = $("#sendMsg");
+    const messagesContainer = $("#messages");
     const loginPage = $("#loginPage");
     const chatDashboard = $("#chatDashboard");
+    const userDetailName = $("#userDetailName");
 
     // Connect button click event
+    $("form").on("submit", function (event) {
+        event.preventDefault(); // Prevent form from submitting
 
-    socket = io();  // Connect to the server
+        const user = $("#username").val();
+        const roomId = $("#roomid").val();
 
-    if (user && getRoom) {
-        loginPage.hide();
-        chatDashboard.show();
-        // When connected
-        socket.on("connect", () => {
-            console.log("Connected to server");
-            console.log(user);
-            userStatus.text(`${user} Connected to server`);
-            socket.emit('user', user)
-            socket.emit('create', getRoom);
-        });
+        if (user && roomId) {
+            // Hide login page and show chat dashboard
+            loginPage.hide();
+            chatDashboard.show();
 
+            // Connect to the server
+            socket = io();
 
-        sendMsgBtn.on('click', (event) => {
-            event.preventDefault()
-            if (msgInput.val()) {
-                socket.emit('send', msgInput.val())
-                msgInput.val('')
-                socket.emit('sendStatus', " ");
-            }
-        })
-        msgInput.on('focus', (event) => {
-            event.preventDefault()
-            socket.emit('sendStatus', "Typing...")
-        })
+            // When connected
+            socket.on("connect", () => {
+                console.log("Connected to server");
+                userStatus.text(`Online`);
+                userDetailName.text(user)
+                // Emit user and room information to server
+                socket.emit('user', user);
+                socket.emit('create', roomId);
+            });
 
-        socket.on('typing', (msg) => {
-            if (msg) {
-                $("#statusOfuser").html(msg)
-            }
-        })
-        socket.on('message', (msg) => {
-            if (msg) {
-                let msgP = $('<p></p>');
-                msgP.html(msg)
-                messagesContainer.append(msgP)
-            }
-        })
-    }else{
-        alert("Kindly insert Username and RoomId")
-    }
+            // Sending a message
+            sendMsgBtn.on('click', (event) => {
+                event.preventDefault();
+                const message = msgInput.val();
+                if (message) {
+                    socket.emit('send', message);
+                    msgInput.val(''); // Clear input field after sending
+                    socket.emit('sendStatus', " "); // Clear typing status
+                }
+            });
 
+            // Detect when user is typing
+            msgInput.on('focus', (event) => {
+                socket.emit('sendStatus', "Typing...");
+            });
+
+            // Handle 'typing' event from server
+            socket.on('typing', (msg) => {
+                if (msg) {
+                    $("#statusOfuser").html(msg);
+                }
+            });
+
+            // Handle receiving a message
+            socket.on('message', (msg) => {
+                const currentTime = new Date().toLocaleTimeString(); // Get current time
+                if (msg.user === 'System') {
+                    const msgDiv = $('<div></div>').addClass('joined-notification');
+
+                    // Format message with time
+                    msgDiv.html(`<span class="joined-message">${msg.message}</span><span class="joined-time">${currentTime}</span>`);
+                    messagesContainer.append(msgDiv[0]);
+                } else {
+                    const msgDiv = $('<div></div>');
+                    if (msg.user === user) {
+                        msgDiv.addClass('chat-message user-message');
+                    } else {
+                        msgDiv.addClass('chat-message contact-message');
+                    }
+                    msgDiv.html(`<div class="message-content">
+                                    <p><strong>${msg.user}</strong>: ${msg.message}</p>
+                                    <span class="timestamp">${currentTime}</span>
+                                </div>`)
+                    messagesContainer.append(msgDiv);
+                }
+            });
+        } else {
+            alert("Please enter both Username and Room ID");
+        }
+    });
 });

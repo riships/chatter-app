@@ -1,20 +1,23 @@
 /* General Styles */
-*{
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     font-family: Arial, sans-serif;
 }
+
 body,
 html {
     margin: 0;
     padding: 0;
     height: 100%;
 }
-p{
+
+p {
     margin: 0;
 }
-h3{
+
+h3 {
     margin: 0;
 }
 
@@ -234,6 +237,36 @@ h3{
     margin-left: 10px;
     border-radius: 5px;
     cursor: pointer;
+}
+
+/* Style for chat notifications (like user joining or leaving the chat) */
+.joined-notification {
+    display: flex;
+    justify-content: space-between;
+    background-color: #f1f1f1;
+    padding: 5px;
+    border-radius: 36px;
+    margin: 10px auto;
+    color: #333;
+    font-style: italic;
+    font-size: 14px;
+    width: 206px;
+    flex-direction: column;
+    align-items: center;
+}
+
+.joined-notification .joined-message {
+    font-weight: bold;
+    color: #4caf50;
+    /* A nice green color to indicate a user joined */
+}
+
+.joined-notification .joined-time {
+    font-size: 12px;
+    color: #888;
+    /* Light gray for the timestamp */
+    margin-left: 10px;
+    align-self: center;
 }
 
 /* Responsive Styles */

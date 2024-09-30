@@ -24,14 +24,16 @@ io.on('connection', (socket) => {
     socket.on("user", (user) => {
         socket.on('create', function (room) {
 
-            socket.broadcast.to(room).emit('message', `${user} has joined the chat`);
+            const joinMessage = `${user} has joined the chat`;
+            socket.broadcast.in(room).emit('message', { user: 'System', message: joinMessage });
 
             socket.join(room);
 
             // Handle message sending
             socket.on("send", (msg) => {
                 if (msg) {
-                    socket.to(room).emit('message', `<b>${user}:-</b> ${msg}`); // Broadcast to all connected clients
+                    let msgData = { user: user, message: msg }
+                    io.in(room).emit('message', msgData); // Broadcast to all connected clients
                 }
             });
 
