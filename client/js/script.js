@@ -28,7 +28,6 @@ $(document).ready(function () {
 
             // When connected
             socket.on("connect", () => {
-                console.log("Connected to server");
                 userStatus.text(`Online`);
                 userDetailName.text(user)
                 // Emit user and room information to server
