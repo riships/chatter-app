@@ -22,7 +22,6 @@ io.on('connection', (socket) => {
     socket.on("user", (user) => {
         console.log(user + " connected");
         socket.on('create', function (room) {
-
             const joinMessage = `${user} has joined the chat`;
             socket.broadcast.in(room).emit('message', { user: 'System', message: joinMessage });
 
@@ -46,7 +45,12 @@ io.on('connection', (socket) => {
 
             // Handle client disconnect
             socket.on("disconnect", () => {
-                console.log(`${user} disconnected`);
+                let msgData = { user: user, message: `${user} has disconnected` };
+
+                // Broadcasting the disconnect message to other users in the room
+                socket.broadcast.to(room).emit('dis-message', msgData);
+
+                console.log(`${user} disconnected`, msgData);
             });
         });
     });

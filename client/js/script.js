@@ -11,12 +11,27 @@ $(document).ready(function () {
     const chatDashboard = $("#chatDashboard");
     const userDetailName = $("#userDetailName");
 
+
+    $("#profilePicContainer").on('click', (event) => {
+        $("#popUpImages").show();
+        $("#dummyProfileContainer").hide();
+    });
+
+    $(".pop-up-image img").click(function () {
+        const imgUrl = $(this).attr("src"); // Get the URL of the clicked image
+        $("#popUpImages").hide();
+        $("#profile-preview").show();
+        $("#profile-preview").attr("src", imgUrl);
+        // Additional logic can go here (e.g., displaying the image in a larger view)
+    });
+
     // Connect button click event
     $("form").on("submit", function (event) {
         event.preventDefault(); // Prevent form from submitting
 
         const user = $("#username").val();
         const roomId = $("#roomid").val();
+
 
         if (user && roomId) {
             // Hide login page and show chat dashboard
@@ -35,6 +50,13 @@ $(document).ready(function () {
                 socket.emit('create', roomId);
             });
 
+
+            // Handle connection errors
+            socket.on("connect_error", (error) => {
+                console.error("Connection failed:", error);
+                alert("Unable to connect to the server. Please try again.");
+            });
+
             // Sending a message
             sendMsgBtn.on('click', (event) => {
                 event.preventDefault();
@@ -47,8 +69,14 @@ $(document).ready(function () {
             });
 
             // Detect when user is typing
-            msgInput.on('focus', (event) => {
+            let typingTimeout;
+            msgInput.on('input', () => {
                 socket.emit('sendStatus', "Typing...");
+                clearTimeout(typingTimeout);
+                typingTimeout = setTimeout(() => {
+                    socket.emit('sendStatus', "");
+                }, 1000);
+                sendMsgBtn.prop('disabled', !msgInput.val());
             });
 
             // Handle 'typing' event from server
@@ -61,24 +89,37 @@ $(document).ready(function () {
             // Handle receiving a message
             socket.on('message', (msg) => {
                 const currentTime = new Date().toLocaleTimeString(); // Get current time
-                if (msg.user === 'System') {
-                    const msgDiv = $('<div></div>').addClass('joined-notification');
+                const msgDiv = $('<div></div>').addClass(msg.user === 'System' ? 'joined-notification' : 'chat-message');
 
-                    // Format message with time
+                if (msg.user === 'System') {
                     msgDiv.html(`<span class="joined-message">${msg.message}</span><span class="joined-time">${currentTime}</span>`);
-                    messagesContainer.append(msgDiv[0]);
                 } else {
-                    const msgDiv = $('<div></div>');
-                    if (msg.user === user) {
-                        msgDiv.addClass('chat-message user-message');
-                    } else {
-                        msgDiv.addClass('chat-message contact-message');
-                    }
+                    msgDiv.addClass(msg.user === user ? 'user-message' : 'contact-message');
                     msgDiv.html(`<div class="message-content">
                                     <p><strong>${msg.user}</strong>: ${msg.message}</p>
-                                    <span class="timestamp">${currentTime}</span>
-                                </div>`)
-                    messagesContainer.append(msgDiv);
+                                    <span class="timestamp" ${msg.user === user ? 'style = "color:#fff;"' : ''}>${currentTime}</span>
+                                  </div>`);
+                }
+
+                messagesContainer.append(msgDiv);
+                messagesContainer.animate({ scrollTop: messagesContainer[0].scrollHeight }, 500);
+            });
+
+
+            // Handle disconnect event
+            socket.on('dis-message', (msgData) => {
+                const currentTime = new Date().toLocaleTimeString(); // Get current time
+                const msgDiv = $('<div></div>').addClass('joined-notification');
+                msgDiv.html(`<span class="leave-message">${msgData.message}</span><span class="joined-time">${currentTime}</span>`);
+                $("#messages").append(msgDiv);
+            });
+
+
+            // Allow sending messages with Enter key
+            msgInput.on('keypress', function (event) {
+                if (event.which === 13 && !event.shiftKey) {
+                    event.preventDefault();
+                    sendMsgBtn.click();
                 }
             });
         } else {
