@@ -48,8 +48,8 @@ $(document).ready(function () {
                 // Emit user and room information to server
                 socket.emit('user', user);
                 socket.emit('create', roomId);
+                socket.emit('img-url', $("#profile-preview").attr("src"));
             });
-
 
             // Handle connection errors
             socket.on("connect_error", (error) => {

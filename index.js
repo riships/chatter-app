@@ -22,38 +22,44 @@ io.on('connection', (socket) => {
     socket.on("user", (user) => {
         console.log(user + " connected");
         socket.on('create', function (room) {
+            let joinedUserProfile = '';
+            socket.on("img-url", (msg) => {
+                joinedUserProfile = msg;
+            });
             const joinMessage = `${user} has joined the chat`;
-            socket.broadcast.in(room).emit('message', { user: 'System', message: joinMessage });
+            socket.broadcast.in(room).emit('message', { user: 'System', message: joinMessage, user_profile: joinedUserProfile });
+        socket.join(room);
 
-            socket.join(room);
 
-            // Handle message sending
-            socket.on("send", (msg) => {
-                if (msg) {
-                    let msgData = { user: user, message: msg }
-                    io.in(room).emit('message', msgData); // Broadcast to all connected clients
-                }
-            });
 
-            socket.on("sendStatus", (msg) => {
-                if (msg == ' ') {
-                    socket.to(room).emit('typing', ` `); // Broadcast to all connected clients
-                } else {
-                    socket.to(room).emit('typing', `<b>${user}:-</b> ${msg}`);
-                }
-            });
+        // Handle message sending
+        socket.on("send", (msg) => {
+            if (msg) {
+                let msgData = { user: user, message: msg }
+                io.in(room).emit('message', msgData); // Broadcast to all connected clients
+            }
+        });
 
-            // Handle client disconnect
-            socket.on("disconnect", () => {
-                let msgData = { user: user, message: `${user} has disconnected` };
 
-                // Broadcasting the disconnect message to other users in the room
-                socket.broadcast.to(room).emit('dis-message', msgData);
+        socket.on("sendStatus", (msg) => {
+            if (msg == ' ') {
+                socket.to(room).emit('typing', ` `); // Broadcast to all connected clients
+            } else {
+                socket.to(room).emit('typing', `<b>${user}:-</b> ${msg}`);
+            }
+        });
 
-                console.log(`${user} disconnected`, msgData);
-            });
+        // Handle client disconnect
+        socket.on("disconnect", () => {
+            let msgData = { user: user, message: `${user} has disconnected` };
+
+            // Broadcasting the disconnect message to other users in the room
+            socket.broadcast.to(room).emit('dis-message', msgData);
+
+            console.log(`${user} disconnected`);
         });
     });
+});
 })
 
 const PORT = myConfig.PORT
