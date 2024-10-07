@@ -98,16 +98,25 @@ $(document).ready(function () {
             // Handle receiving a message
             socket.on('message', (msg) => {
                 const currentTime = new Date().toLocaleTimeString(); // Get current time
-                const msgDiv = $('<div></div>').addClass(msg.user === 'System' ? 'joined-notification' : 'chat-message');
+                const msgDiv = $('<div></div>').addClass(msg.user_type === 'System' ? 'joined-notification' : 'chat-message');
 
-                if (msg.user === 'System') {
+                if (msg.user_type === 'System') {
                     msgDiv.html(`<span class="joined-message">${msg.message}</span><span class="joined-time">${currentTime}</span>`);
+                    let joinedUser = `<div class="conversation-item">
+                    <img src="/${msg.user_profile}" alt="Contact" class="contact-pic" id="contact-pic_${msg.user}">
+                    <div class="conversation-info">
+                        <h5>${msg.user}</h5>
+                    </div>
+                    <span class="time">${currentTime}</span>
+                </div>`
+                    $("#conversationList").append(joinedUser)
                 } else {
                     msgDiv.addClass(msg.user === user ? 'user-message' : 'contact-message');
                     msgDiv.html(`<div class="message-content">
                                     <p><strong>${msg.user}</strong>: ${msg.message}</p>
                                     <span class="timestamp" ${msg.user === user ? 'style = "color:#fff;"' : ''}>${currentTime}</span>
                                   </div>`);
+
                 }
 
                 messagesContainer.append(msgDiv);

@@ -23,42 +23,40 @@ io.on('connection', (socket) => {
     socket.on("user", (user) => {
         console.log(user + " connected");
         socket.on('create', function (room) {
-            let joinedUserProfile = '';
-            socket.on("img-url", (msg) => {
-                joinedUserProfile = msg;
-            });
-            const joinMessage = `${user} has joined the chat`;
-            socket.broadcast.in(room).emit('message', { user: 'System', message: joinMessage, user_profile: joinedUserProfile });
-            socket.join(room);
+            socket.on("img-url", (imgUrl) => {
+                const joinMessage = `${user} has joined the chat`;
+                socket.broadcast.in(room).emit('message', { user_type: 'System', user: user, message: joinMessage, user_profile: imgUrl });
+                socket.join(room);
 
-            // Handle message sending
-            socket.on("send", async (msg) => {
-                if (msg) {
-                    const storeMessage = new Message({ username: user, text: msg });
-                    await storeMessage.save();
+                // Handle message sending
+                socket.on("send", async (msg) => {
+                    if (msg) {
+                        const storeMessage = new Message({ username: user, text: msg });
+                        await storeMessage.save();
 
-                    let msgData = { user: user, message: msg }
-                    io.in(room).emit('message', msgData); // Broadcast to all connected clients
-                }
-            });
+                        let msgData = { user: user, message: msg }
+                        io.in(room).emit('message', msgData); // Broadcast to all connected clients
+                    }
+                });
 
 
-            socket.on("sendStatus", (msg) => {
-                if (msg ===  '' || msg === null || msg === undefined) {
-                    socket.to(room).emit('typing', ` `); // Broadcast to all connected clients
-                } else {
-                    socket.to(room).emit('typing', `<b>${user}:-</b> ${msg}`);
-                }
-            });
+                socket.on("sendStatus", (msg) => {
+                    if (msg === '' || msg === null || msg === undefined) {
+                        socket.to(room).emit('typing', ` `); // Broadcast to all connected clients
+                    } else {
+                        socket.to(room).emit('typing', `<b>${user}:-</b> ${msg}`);
+                    }
+                });
 
-            // Handle client disconnect
-            socket.on("disconnect", () => {
-                let msgData = { user: user, message: `${user} has disconnected` };
+                // Handle client disconnect
+                socket.on("disconnect", () => {
+                    let msgData = { user: user, message: `${user} has disconnected` };
 
-                // Broadcasting the disconnect message to other users in the room
-                socket.broadcast.to(room).emit('dis-message', msgData);
+                    // Broadcasting the disconnect message to other users in the room
+                    socket.broadcast.to(room).emit('dis-message', msgData);
 
-                console.log(`${user} disconnected`);
+                    console.log(`${user} disconnected`);
+                });
             });
         });
     });
