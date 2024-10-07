@@ -16,11 +16,11 @@
             <h2>Chat App</h2>
             <form>
                 <label for="profile-preview" id="profilePicContainer">
-                    <div id="dummyProfileContainer"  class="profile-pic-container">
+                    <div id="dummyProfileContainer" class="profile-pic-container">
                         <span style="color: white;">
-                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="100"
-                                height="100" viewBox="0 0 256 256" xml:space="preserve">
-                        
+                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                                version="1.1" width="100" height="100" viewBox="0 0 256 256" xml:space="preserve">
+
                                 <defs>
                                 </defs>
                                 <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;"
@@ -31,7 +31,7 @@
                                 </g>
                             </svg>
                         </span>
-                        
+
                         <span class="edit-icon">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 26 26" width="26px" height="26px">
                                 <path
@@ -40,7 +40,8 @@
                             </svg>
                         </span>
                     </div>
-                    <img src="images/user1.jpg" id="profile-preview" alt="Profile Preview" class="img-preview" style="display: none;">
+                    <img src="images/user1.jpg" id="profile-preview" alt="Profile Preview" class="img-preview"
+                        style="display: none;">
                 </label>
                 <div class="pop-up-images" id="popUpImages" style="display: none;">
                     <div class="pop-up-image">
@@ -63,7 +64,7 @@
     <!-- Chat Dashboard -->
     <div class="chat-dashboard" id="chatDashboard" style="display: none;">
         <!-- Sidebar -->
-        <div class="sidebar">
+        <div class="sidebar hidden" id="sidebar">
             <div class="search-bar">
                 <input type="text" placeholder="Search...">
             </div>
@@ -80,6 +81,9 @@
             </div>
         </div>
 
+        <!-- Sidebar Toggle Button for Mobile -->
+        <button id="toggleSidebar" class="toggle-btn">&#9776;</button>
+
         <!-- Main Chat Window -->
         <div class="main-chat-window">
             <div class="chat-header">
@@ -89,6 +93,7 @@
             <div class="chat-area" id="messages">
                 <!-- More chat messages -->
             </div>
+            <div id="typing-status" class="typing-status"></div>
             <div class="chat-input-area">
                 <input id="msgInput" type="text" placeholder="Type a message...">
                 <button id="sendMsg" class="send-btn">Send</button>

@@ -11,6 +11,12 @@ $(document).ready(function () {
     const chatDashboard = $("#chatDashboard");
     const userDetailName = $("#userDetailName");
 
+    $("#toggleSidebar").on("click", function () {
+        const sidebar = $("#sidebar");
+        sidebar.toggleClass("visible");
+        sidebar.toggleClass("hidden");
+    });
+
 
     $("#profilePicContainer").on('click', (event) => {
         $("#popUpImages").show();
@@ -64,7 +70,6 @@ $(document).ready(function () {
                 if (message) {
                     socket.emit('send', message);
                     msgInput.val(''); // Clear input field after sending
-                    socket.emit('sendStatus', " "); // Clear typing status
                 }
             });
 
@@ -82,8 +87,12 @@ $(document).ready(function () {
             // Handle 'typing' event from server
             socket.on('typing', (msg) => {
                 if (msg) {
-                    $("#statusOfuser").html(msg);
+                    $("#typing-status").show();
+                    $("#typing-status").html(msg);
+                } else {
+                    $("#typing-status").hide();
                 }
+
             });
 
             // Handle receiving a message
