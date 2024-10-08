@@ -10,6 +10,7 @@ $(document).ready(function () {
     const loginPage = $("#loginPage");
     const chatDashboard = $("#chatDashboard");
     const userDetailName = $("#userDetailName");
+    const userImgHead = $("#user_img_head");
     const currentTime = new Date().toLocaleTimeString(); // Get current time
 
 
@@ -53,6 +54,10 @@ $(document).ready(function () {
             socket.on("connect", () => {
                 userStatus.text(`Online`);
                 userDetailName.text(user)
+                socket.on('img-url',(imgUrl)=>{
+                    userImgHead.attr('src', imgUrl)
+                })
+                
                 // Emit user and room information to server
                 socket.emit('user', user);
                 socket.emit('create', roomId);
@@ -102,7 +107,7 @@ $(document).ready(function () {
             // Handle receiving a message
             socket.on('message', (msg) => {
                 const msgDiv = $('<div></div>').addClass(msg.userDetails.user_type === 'System' ? 'joined-notification' : 'chat-message');
-
+                
                 if (msg.userDetails.user_type === 'System') {
                     msgDiv.html(`<span class="joined-message">${msg.userDetails.message}</span><span class="joined-time">${currentTime}</span>`);
                 } else {
@@ -118,36 +123,52 @@ $(document).ready(function () {
             });
 
             socket.on('loadPreviousMessages', (previousMessages) => {
-                
                 previousMessages.forEach((previousMessage) => {
-                    const msgDiv = $('<div></div>').addClass('chat-message');
-                    msgDiv.addClass(previousMessage.username === user ? 'user-message' : 'contact-message');
-                    msgDiv.html(`<div class="message-content">
+                    userMessages(previousMessage)
+                })
+            })
+
+
+            function userMessages(previousMessage) {
+                const msgDiv = $('<div></div>').addClass('chat-message');
+                msgDiv.addClass(previousMessage.username === user ? 'user-message' : 'contact-message');
+                let dateData = new Date(previousMessage.timestamp)
+                msgDiv.html(`<div class="message-content">
                                     <p><strong>${previousMessage.username}</strong>: ${previousMessage.text}</p>
-                                    <span class="timestamp" ${previousMessage.username === user ? 'style = "color:#fff;"' : ''}>${new Date(previousMessage.timestamp).toDateString()}</span>
+                                    <span class="timestamp" ${previousMessage.username === user ? 'style = "color:#fff;"' : ''}>${dateData.toDateString() + dateData.toLocaleTimeString()}</span>
                                   </div>`);
 
-                    messagesContainer.append(msgDiv);
-                    messagesContainer.animate({ scrollTop: messagesContainer[0].scrollHeight }, 500);
-                })
-
-            })
+                messagesContainer.append(msgDiv);
+                messagesContainer.animate({ scrollTop: messagesContainer[0].scrollHeight }, 500);
+            }
 
             socket.on('joined-users-details', (joindedUsers) => {
                 let newArr = joindedUsers.filter(joinedUser => joinedUser.user !== $("#userDetailName").text());
-
-                let joinedUser = '';
-                newArr.forEach(element => {
-                    joinedUser += `<div class="conversation-item">
-                    <img src="/${element.user_profile}" alt="Contact" class="contact-pic" id="contact-pic_${element.user}">
-                    <div class="conversation-info">
-                        <h5>${element.user}</h5>
-                    </div>
-                    <span class="time">${currentTime}</span>
-                </div>`
-
+                $("#filters").on('input', (e) => {
+                    const query = e.target.value.toLowerCase();  // Convert query to lowercase for case-insensitive search
+                    let newArr = joindedUsers.filter(user => user.user.toLowerCase().includes(query) && user.user !== $("#userDetailName").text()); // Filter users
+                    userDetails(newArr)
                 });
-                $("#conversationList").html(joinedUser)
+
+                userDetails(newArr)
+
+
+                function userDetails(users) {
+                    let joinedUser = ''
+                    users.forEach((myUser) => {
+
+                        joinedUser += 
+                        `<div class="conversation-item">
+                            <img src="/${myUser.user_profile}" alt="Contact" class="contact-pic" id="contact-pic_${myUser.user}">
+                                <div class="conversation-info">
+                                    <h5>${myUser.user}</h5>
+                                </div>
+                            <span class="time">${currentTime}</span>
+                        </div>`
+                    })
+                    $("#conversationList").html(joinedUser)
+                }
+
             })
 
 

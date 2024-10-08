@@ -27,11 +27,13 @@ io.on('connection', (socket) => {
         socket.on('create', async function (room) {
             socket.on("img-url", async (imgUrl) => {
                 socket.join(room);
+
                 const joinMessage = `${user} has joined the chat`;
                 let userDetails = { user_type: 'System', user: user, message: joinMessage, user_profile: imgUrl };
                 if (joinedUsers.map(elem => elem.user !== user)) {
                     joinedUsers.push(userDetails);
                 }
+                socket.emit('img-url',imgUrl)
 
                 // Fetch previous messages from MongoDB and send them to the newly joined user
                 try {

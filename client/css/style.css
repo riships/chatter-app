@@ -12,6 +12,16 @@ html {
     padding: 0;
     height: 100%;
 }
+#user_img_head {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+.chat-header-details{
+    display: flex;
+    align-items: center;
+}
 
 p {
     margin: 0;
@@ -193,7 +203,7 @@ h3 {
 }
 
 .chat-header {
-    padding: 20px;
+    padding: 10px;
     background-color: #aa4dbc;
     color: white;
     display: flex;
