@@ -10,6 +10,8 @@ $(document).ready(function () {
     const loginPage = $("#loginPage");
     const chatDashboard = $("#chatDashboard");
     const userDetailName = $("#userDetailName");
+    const currentTime = new Date().toLocaleTimeString(); // Get current time
+
 
     $("#toggleSidebar").on("click", function () {
         const sidebar = $("#sidebar");
@@ -86,10 +88,12 @@ $(document).ready(function () {
 
             // Handle 'typing' event from server
             socket.on('typing', (msg) => {
+                console.log(msg);
+
                 if (msg) {
                     $("#typing-status").show();
                     $("#typing-status").html(msg);
-                } else {
+                } else if (msg === '' || msg === null || msg === undefined) {
                     $("#typing-status").hide();
                 }
 
@@ -97,31 +101,54 @@ $(document).ready(function () {
 
             // Handle receiving a message
             socket.on('message', (msg) => {
-                const currentTime = new Date().toLocaleTimeString(); // Get current time
-                const msgDiv = $('<div></div>').addClass(msg.user_type === 'System' ? 'joined-notification' : 'chat-message');
+                const msgDiv = $('<div></div>').addClass(msg.userDetails.user_type === 'System' ? 'joined-notification' : 'chat-message');
 
-                if (msg.user_type === 'System') {
-                    msgDiv.html(`<span class="joined-message">${msg.message}</span><span class="joined-time">${currentTime}</span>`);
-                    let joinedUser = `<div class="conversation-item">
-                    <img src="/${msg.user_profile}" alt="Contact" class="contact-pic" id="contact-pic_${msg.user}">
-                    <div class="conversation-info">
-                        <h5>${msg.user}</h5>
-                    </div>
-                    <span class="time">${currentTime}</span>
-                </div>`
-                    $("#conversationList").append(joinedUser)
+                if (msg.userDetails.user_type === 'System') {
+                    msgDiv.html(`<span class="joined-message">${msg.userDetails.message}</span><span class="joined-time">${currentTime}</span>`);
                 } else {
-                    msgDiv.addClass(msg.user === user ? 'user-message' : 'contact-message');
+                    msgDiv.addClass(msg.userDetails.user === user ? 'user-message' : 'contact-message');
                     msgDiv.html(`<div class="message-content">
-                                    <p><strong>${msg.user}</strong>: ${msg.message}</p>
-                                    <span class="timestamp" ${msg.user === user ? 'style = "color:#fff;"' : ''}>${currentTime}</span>
+                                    <p><strong>${msg.userDetails.user}</strong>: ${msg.userDetails.message}</p>
+                                    <span class="timestamp" ${msg.userDetails.user === user ? 'style = "color:#fff;"' : ''}>${currentTime}</span>
                                   </div>`);
-
                 }
 
                 messagesContainer.append(msgDiv);
                 messagesContainer.animate({ scrollTop: messagesContainer[0].scrollHeight }, 500);
             });
+
+            socket.on('loadPreviousMessages', (previousMessages) => {
+                
+                previousMessages.forEach((previousMessage) => {
+                    const msgDiv = $('<div></div>').addClass('chat-message');
+                    msgDiv.addClass(previousMessage.username === user ? 'user-message' : 'contact-message');
+                    msgDiv.html(`<div class="message-content">
+                                    <p><strong>${previousMessage.username}</strong>: ${previousMessage.text}</p>
+                                    <span class="timestamp" ${previousMessage.username === user ? 'style = "color:#fff;"' : ''}>${new Date(previousMessage.timestamp).toDateString()}</span>
+                                  </div>`);
+
+                    messagesContainer.append(msgDiv);
+                    messagesContainer.animate({ scrollTop: messagesContainer[0].scrollHeight }, 500);
+                })
+
+            })
+
+            socket.on('joined-users-details', (joindedUsers) => {
+                let newArr = joindedUsers.filter(joinedUser => joinedUser.user !== $("#userDetailName").text());
+
+                let joinedUser = '';
+                newArr.forEach(element => {
+                    joinedUser += `<div class="conversation-item">
+                    <img src="/${element.user_profile}" alt="Contact" class="contact-pic" id="contact-pic_${element.user}">
+                    <div class="conversation-info">
+                        <h5>${element.user}</h5>
+                    </div>
+                    <span class="time">${currentTime}</span>
+                </div>`
+
+                });
+                $("#conversationList").html(joinedUser)
+            })
 
 
             // Handle disconnect event
