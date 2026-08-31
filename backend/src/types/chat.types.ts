@@ -51,6 +51,7 @@ export interface ServerToClientEvents {
   'joined-users-details': (users: UserDetails[]) => void;
   'all-users-list': (users: UserAccount[]) => void;
   'user-joined-rooms': (rooms: RoomData[]) => void;
+  'all-public-rooms': (rooms: RoomData[]) => void;
   'message': (data: ChatMessagePayload) => void;
   'typing': (typingHtml: string | null) => void;
   'dis-message': (data: DisconnectMessagePayload) => void;
@@ -76,6 +77,7 @@ export interface ClientToServerEvents {
   'send-direct': (data: { targetUser: string; text: string }) => void;
   'get-all-users': () => void;
   'get-my-joined-rooms': () => void;
+  'get-all-public-rooms': () => void;
 }
 
 export interface InterServerEvents {

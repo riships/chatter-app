@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UserAccount, RoomData, ChatMode } from '../types/chat';
-import { Search, MessageSquare, Plus, LogOut, X, Hash, MessageCircle, ShieldCheck, Users } from 'lucide-react';
+import { Search, MessageSquare, Plus, LogOut, X, Hash, MessageCircle, ShieldCheck, Users, Globe, ArrowRight } from 'lucide-react';
 
 interface SidebarProps {
   currentUser: string;
@@ -8,6 +8,7 @@ interface SidebarProps {
   roomDetails?: RoomData | null;
   allUsers: UserAccount[];
   joinedRooms: RoomData[];
+  allPublicRooms?: RoomData[];
   activeMode: ChatMode;
   activeTarget: string;
   unreadCounts: Record<string, number>;
@@ -24,6 +25,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   currentUser,
   allUsers,
   joinedRooms,
+  allPublicRooms = [],
   activeMode,
   activeTarget,
   unreadCounts,
@@ -44,9 +46,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
     .filter((u) => u.username !== currentUser)
     .filter((u) => u.username.toLowerCase().includes(searchQuery.toLowerCase()));
 
-  const filteredRooms = joinedRooms.filter((r) =>
+  const filteredJoinedRooms = joinedRooms.filter((r) =>
     r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     r.roomId.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Discoverable public rooms that the user hasn't joined yet
+  const joinedRoomIds = new Set(joinedRooms.map((r) => r.roomId));
+  const discoverablePublicRooms = allPublicRooms.filter(
+    (r) =>
+      !joinedRoomIds.has(r.roomId) &&
+      (r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        r.roomId.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const handleRoomSubmit = (e: React.FormEvent) => {
@@ -58,7 +69,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
-  const formatLastSeen = (dateStr?: string) => {
+  const formatLastSeen = (dateStr?: string | Date) => {
     if (!dateStr) return 'Offline';
     const date = new Date(dateStr);
     return `Last seen ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
@@ -265,7 +276,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div style={{ padding: '4px 14px 8px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 2px' }}>
             <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Joined Groups ({filteredRooms.length})
+              Joined Groups ({filteredJoinedRooms.length})
             </span>
             <button
               onClick={() => setShowRoomInput(!showRoomInput)}
@@ -322,7 +333,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </form>
           )}
 
-          {filteredRooms.map((r, idx) => {
+          {filteredJoinedRooms.map((r, idx) => {
             const isSelected = activeMode === 'room' && activeTarget === r.roomId;
             const unreadCount = unreadCounts[r.roomId] || 0;
 
@@ -394,6 +405,52 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </button>
             );
           })}
+
+          {/* Discoverable Public Groups Created by Anyone */}
+          {discoverablePublicRooms.length > 0 && (
+            <div style={{ marginTop: 8 }}>
+              <div style={{ padding: '6px 2px', fontSize: '0.72rem', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <Globe style={{ width: 13, height: 13 }} />
+                <span>Explore Public Groups ({discoverablePublicRooms.length})</span>
+              </div>
+
+              {discoverablePublicRooms.map((r, idx) => (
+                <button
+                  key={idx}
+                  className="spring-btn"
+                  onClick={() => {
+                    onJoinRoom(r.roomId);
+                    if (window.innerWidth <= 768) onCloseMobile();
+                  }}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '8px 12px',
+                    borderRadius: 12,
+                    border: '1px border-dashed rgba(192, 132, 252, 0.3)',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    color: 'var(--text-muted)',
+                    fontSize: '0.82rem',
+                    cursor: 'pointer',
+                    marginBottom: 4,
+                    textAlign: 'left',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Hash style={{ width: 14, height: 14, color: 'var(--accent)' }} />
+                    <span>{r.name}</span>
+                  </div>
+
+                  <span style={{ fontSize: '0.74rem', color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 3, fontWeight: 600 }}>
+                    <span>Join</span>
+                    <ArrowRight style={{ width: 12, height: 12 }} />
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

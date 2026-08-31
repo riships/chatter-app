@@ -62,7 +62,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     ? targetUserAccount?.userProfile || 'images/user1.jpg'
     : avatarUrl;
 
-  const formatLastSeen = (dateStr?: string) => {
+  const formatLastSeen = (dateStr?: string | Date) => {
     if (!dateStr) return 'Offline';
     const date = new Date(dateStr);
     return `Last seen ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;

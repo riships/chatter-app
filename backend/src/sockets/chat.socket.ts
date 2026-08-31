@@ -41,6 +41,25 @@ const broadcastAllUsers = async (
   }
 };
 
+const broadcastAllPublicRooms = async (
+  io: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>
+) => {
+  try {
+    const rooms = await Room.find().sort({ createdAt: -1 });
+    const roomPayloads: RoomData[] = rooms.map((r) => ({
+      roomId: r.roomId,
+      name: r.name,
+      description: r.description,
+      createdBy: r.createdBy,
+      members: r.members,
+      createdAt: r.createdAt,
+    }));
+    io.emit('all-public-rooms', roomPayloads);
+  } catch (err) {
+    console.error('[Socket Error] Failed to broadcast public rooms:', err);
+  }
+};
+
 const sendUserJoinedRooms = async (socket: CustomSocket, username: string) => {
   try {
     const rooms = await Room.find({ members: username }).sort({ createdAt: -1 });
@@ -90,7 +109,6 @@ export const registerChatSocketHandlers = (
   io: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>,
   socket: CustomSocket
 ) => {
-  console.log(`[Socket] New connection: ${socket.id}`);
 
   const handleRoomJoin = async () => {
     const { user, room, imgUrl } = socket.data;
@@ -118,12 +136,10 @@ export const registerChatSocketHandlers = (
           createdBy: user,
           members: [user],
         });
-        console.log(`[Room] Created new room '${room}' by creator: ${user}`);
       } else {
         if (!roomDoc.members.includes(user)) {
           roomDoc.members.push(user);
           await roomDoc.save();
-          console.log(`[Room] Added user '${user}' as a member to room '${room}'`);
         }
       }
 
@@ -159,6 +175,7 @@ export const registerChatSocketHandlers = (
       socket.broadcast.to(room).emit('message', { userDetails });
 
       await sendUserJoinedRooms(socket, user);
+      await broadcastAllPublicRooms(io);
     } catch (err: any) {
       console.error('[Socket Error] Room join error:', err.message || err);
       socket.emit('room-error', { message: 'Failed to join or create room' });
@@ -192,6 +209,7 @@ export const registerChatSocketHandlers = (
       io.emit('joined-users-details', presenceManager.getAllJoinedUsers());
       await broadcastAllUsers(io);
       await sendUserJoinedRooms(socket, username);
+      await broadcastAllPublicRooms(io);
 
       if (socket.data.room) {
         handleRoomJoin();
@@ -207,6 +225,11 @@ export const registerChatSocketHandlers = (
     if (user) {
       await sendUserJoinedRooms(socket, user);
     }
+  });
+
+  // Event: 'get-all-public-rooms'
+  socket.on('get-all-public-rooms', async () => {
+    await broadcastAllPublicRooms(io);
   });
 
   // Event: 'update-group-info' (Edit Group Name & Description)
@@ -249,8 +272,7 @@ export const registerChatSocketHandlers = (
       io.in(data.roomId).emit('message', { userDetails: updateSysMessage });
 
       await refreshJoinedRoomsForMembers(io, roomDoc.members);
-
-      console.log(`[Room] Group '${data.roomId}' updated by admin ${user}`);
+      await broadcastAllPublicRooms(io);
     } catch (err: any) {
       console.error('[Socket Error] Failed to update group info:', err.message || err);
     }
@@ -296,8 +318,7 @@ export const registerChatSocketHandlers = (
       io.in(data.roomId).emit('message', { userDetails: removeMessage });
 
       await refreshJoinedRoomsForMembers(io, prevMembers);
-
-      console.log(`[Room] User '${data.targetUser}' removed from room '${data.roomId}' by admin ${user}`);
+      await broadcastAllPublicRooms(io);
     } catch (err: any) {
       console.error('[Socket Error] Failed to remove group member:', err.message || err);
     }
@@ -316,7 +337,6 @@ export const registerChatSocketHandlers = (
         await roomDoc.save();
 
         socket.leave(data.roomId);
-        console.log(`[Room] User ${user} left room ${data.roomId}`);
 
         const leaveMessage: UserDetails = {
           user_type: 'System',
@@ -326,6 +346,7 @@ export const registerChatSocketHandlers = (
         socket.broadcast.to(data.roomId).emit('message', { userDetails: leaveMessage });
 
         await refreshJoinedRoomsForMembers(io, prevMembers);
+        await broadcastAllPublicRooms(io);
       }
     } catch (err: any) {
       console.error('[Socket Error] Leave group error:', err.message || err);
@@ -358,8 +379,8 @@ export const registerChatSocketHandlers = (
         message: `Group '${data.roomId}' was deleted by owner ${user}`,
       });
 
-      console.log(`[Room] Group '${data.roomId}' deleted by owner ${user}`);
       await refreshJoinedRoomsForMembers(io, prevMembers);
+      await broadcastAllPublicRooms(io);
     } catch (err: any) {
       console.error('[Socket Error] Delete group error:', err.message || err);
     }
@@ -392,70 +413,63 @@ export const registerChatSocketHandlers = (
     }
   });
 
-  // Event: 'send-direct'
-  socket.on('send-direct', async (data: { targetUser: string; text: string }) => {
+  // Event: 'send-direct' (Zero-Latency Async DB Ingestion)
+  socket.on('send-direct', (data: { targetUser: string; text: string }) => {
     const { user, imgUrl } = socket.data;
     if (!user || !data.targetUser || !data.text) return;
 
     const privateRoomId = getDirectRoomId(user, data.targetUser);
 
-    try {
-      const storeMessage = new Message({
-        roomId: privateRoomId,
-        username: user,
-        text: data.text,
-        userProfile: imgUrl,
-        isDirect: true,
-        recipient: data.targetUser,
-      });
-      await storeMessage.save();
+    const userDetails: UserDetails = {
+      user_type: 'User',
+      user: user,
+      message: data.text,
+      user_profile: imgUrl,
+      isDirect: true,
+      recipient: data.targetUser,
+      roomId: privateRoomId,
+    };
 
-      const userDetails: UserDetails = {
-        user_type: 'User',
-        user: user,
-        message: data.text,
-        user_profile: imgUrl,
-        isDirect: true,
-        recipient: data.targetUser,
-        roomId: privateRoomId,
-      };
+    // 1. Instant Zero-Latency WebSocket Broadcast
+    io.in(privateRoomId).emit('message', { userDetails });
 
-      io.in(privateRoomId).emit('message', { userDetails });
-      await broadcastAllUsers(io);
-    } catch (err: any) {
-      console.error('[Socket Error] Failed to persist direct message:', err);
-    }
+    // 2. Non-blocking Async Database Persistence
+    Message.create({
+      roomId: privateRoomId,
+      username: user,
+      text: data.text,
+      userProfile: imgUrl,
+      isDirect: true,
+      recipient: data.targetUser,
+    }).catch((err) => console.error('[Async DB Error] Failed to store direct message:', err));
   });
 
-  // Event: 'send'
-  socket.on('send', async (msg: string) => {
+  // Event: 'send' (Zero-Latency Async DB Ingestion)
+  socket.on('send', (msg: string) => {
     const { user, room, imgUrl } = socket.data;
     if (!msg || !user || !room) return;
 
-    try {
-      const isDirect = room.includes('_direct_');
-      const storeMessage = new Message({
-        roomId: room,
-        username: user,
-        text: msg,
-        userProfile: imgUrl,
-        isDirect,
-      });
-      await storeMessage.save();
+    const isDirect = room.includes('_direct_');
+    const userDetails: UserDetails = {
+      user_type: 'User',
+      user: user,
+      message: msg,
+      user_profile: imgUrl,
+      isDirect,
+      roomId: room,
+    };
 
-      const userDetails: UserDetails = {
-        user_type: 'User',
-        user: user,
-        message: msg,
-        user_profile: imgUrl,
-        isDirect,
-        roomId: room,
-      };
+    // 1. Instant Zero-Latency WebSocket Broadcast
+    io.in(room).emit('message', { userDetails });
 
-      io.in(room).emit('message', { userDetails });
-    } catch (err) {
-      console.error('[Socket Error] Failed to persist message:', err);
-    }
+    // 2. Non-blocking Async Database Persistence
+    Message.create({
+      roomId: room,
+      username: user,
+      text: msg,
+      userProfile: imgUrl,
+      isDirect,
+    }).catch((err) => console.error('[Async DB Error] Failed to store message:', err));
   });
 
   // Event: 'img-url'
@@ -491,7 +505,6 @@ export const registerChatSocketHandlers = (
     presenceManager.removeUser(socket.id);
 
     if (user) {
-      // Only set user offline if NO active sockets remain for this user
       const stillActive = presenceManager.isUserJoined(user);
       if (!stillActive) {
         try {
@@ -499,7 +512,6 @@ export const registerChatSocketHandlers = (
             { username: user },
             { isOnline: false, lastSeen: new Date() }
           );
-          console.log(`[Socket] User '${user}' disconnected and marked OFFLINE.`);
         } catch (err) {
           console.error('[Socket Error] Failed to update user disconnect state:', err);
         }

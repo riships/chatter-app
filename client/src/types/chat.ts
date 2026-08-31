@@ -1,3 +1,12 @@
+export interface JoinedUser {
+  socketId: string;
+  user: string;
+  user_profile?: string;
+  room: string;
+  user_type: 'System' | 'User';
+  message?: string;
+}
+
 export interface UserDetails {
   user_type: 'System' | 'User';
   user: string;
@@ -13,7 +22,7 @@ export interface UserAccount {
   username: string;
   userProfile?: string;
   isOnline: boolean;
-  lastSeen?: string;
+  lastSeen?: Date | string;
   lastMessage?: string;
   lastMessageTime?: string;
 }
@@ -33,23 +42,12 @@ export interface RoomData {
   description?: string;
   createdBy: string;
   members: string[];
-  createdAt: string;
+  createdAt: Date | string;
 }
 
-export interface HistoricalMessage {
-  _id?: string;
-  roomId?: string;
-  username: string;
-  text: string;
-  userProfile?: string;
-  isDirect?: boolean;
-  recipient?: string;
-  timestamp: string;
-}
-
-export type ChatMode = 'none' | 'room' | 'direct';
+export type ChatMode = 'none' | 'direct' | 'room';
 
 export interface ActiveChat {
   mode: ChatMode;
-  target: string; // roomId if 'room', username if 'direct'
+  target: string;
 }

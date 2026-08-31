@@ -28,6 +28,7 @@ export const App: React.FC = () => {
   const [roomDetails, setRoomDetails] = useState<RoomData | null>(null);
   const [allUsers, setAllUsers] = useState<UserAccount[]>([]);
   const [joinedRooms, setJoinedRooms] = useState<RoomData[]>([]);
+  const [allPublicRooms, setAllPublicRooms] = useState<RoomData[]>([]);
   const [messages, setMessages] = useState<UserDetails[]>([]);
   const [typingStatus, setTypingStatus] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768);
@@ -97,8 +98,13 @@ export const App: React.FC = () => {
       setJoinedRooms(rooms);
     });
 
+    socket.on('all-public-rooms', (rooms: RoomData[]) => {
+      setAllPublicRooms(rooms);
+    });
+
     socket.on('room-deleted', (data: { roomId: string; message: string }) => {
       setJoinedRooms((prev) => prev.filter((r) => r.roomId !== data.roomId));
+      setAllPublicRooms((prev) => prev.filter((r) => r.roomId !== data.roomId));
       setActiveChat((prev) => {
         if (prev.mode === 'room' && prev.target === data.roomId) {
           return { mode: 'none', target: '' };
@@ -181,6 +187,7 @@ export const App: React.FC = () => {
       socket.off('room-details');
       socket.off('all-users-list');
       socket.off('user-joined-rooms');
+      socket.off('all-public-rooms');
       socket.off('room-deleted');
       socket.off('loadPreviousMessages');
       socket.off('message');
@@ -297,6 +304,7 @@ export const App: React.FC = () => {
     setMessages([]);
     setAllUsers([]);
     setJoinedRooms([]);
+    setAllPublicRooms([]);
     setRoomDetails(null);
     setRoomId('');
     setUnreadCounts({});
@@ -344,6 +352,7 @@ export const App: React.FC = () => {
         roomDetails={roomDetails}
         allUsers={allUsers}
         joinedRooms={joinedRooms}
+        allPublicRooms={allPublicRooms}
         activeMode={activeChat.mode}
         activeTarget={activeChat.target}
         unreadCounts={unreadCounts}
